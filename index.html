@@ -325,35 +325,35 @@
             <span class="color-dot k"></span>
             <span class="sort-option-label-main">
               <span class="sort-option-title">K</span>
-              <span class="sort-option-sub">Karmotrine</span>
+              <span class="sort-option-sub">K = Karmotrine</span>
             </span>
           </button>
           <button class="sort-option" data-key="a" data-label="A">
             <span class="color-dot a"></span>
             <span class="sort-option-label-main">
               <span class="sort-option-title">A</span>
-              <span class="sort-option-sub">Adelhype</span>
+              <span class="sort-option-sub">A = Adelhype</span>
             </span>
           </button>
           <button class="sort-option" data-key="b" data-label="B">
             <span class="color-dot b"></span>
             <span class="sort-option-label-main">
               <span class="sort-option-title">B</span>
-              <span class="sort-option-sub">Bronson Ext</span>
+              <span class="sort-option-sub">B = Bronson Ext</span>
             </span>
           </button>
           <button class="sort-option" data-key="d" data-label="D">
             <span class="color-dot d"></span>
             <span class="sort-option-label-main">
               <span class="sort-option-title">D</span>
-              <span class="sort-option-sub">Pwd Delta</span>
+              <span class="sort-option-sub">D = Pwd Delta</span>
             </span>
           </button>
           <button class="sort-option" data-key="f" data-label="F">
             <span class="color-dot f"></span>
             <span class="sort-option-label-main">
               <span class="sort-option-title">F</span>
-              <span class="sort-option-sub">Flanergide</span>
+              <span class="sort-option-sub">F = Flanergide</span>
             </span>
           </button>
         </div>
@@ -411,7 +411,7 @@
     return 'none';
   }
 
-  function normalizeBlend(v) {
+  function normalizeMix(v) {
     if (typeof v === 'string') {
       const s = v.trim().toLowerCase();
       if (s === 'short' || s === 's') return 'short';
@@ -425,12 +425,15 @@
   }
 
   function normalizeDrinks(raw) {
-    return raw.map(d => ({
-      ...d,
-      ice: normalizeFlagWithOpt(d.ice),
-      age: normalizeFlagWithOpt(d.age),
-      blend: normalizeBlend(d.blend),
-    }));
+    return raw.map(d => {
+      const rawMix = d.mix !== undefined ? d.mix : d.blend;
+      return {
+        ...d,
+        ice: normalizeFlagWithOpt(d.ice),
+        age: normalizeFlagWithOpt(d.age),
+        mix: normalizeMix(rawMix),
+      };
+    });
   }
 
   function matchesQuery(drink, q) {
@@ -555,16 +558,16 @@
 
       const iceState   = (d.ice   || 'none').toString().toLowerCase();
       const ageState   = (d.age   || 'none').toString().toLowerCase();
-      const blendState = (d.blend || '').toString().toLowerCase();
+      const mixState   = (d.mix   || '').toString().toLowerCase();
 
       const hasIceReq = iceState === 'req';
       const hasIceOpt = iceState === 'opt';
       const hasAgeReq = ageState === 'req';
       const hasAgeOpt = ageState === 'opt';
-      const hasBlendShort = blendState === 'short';
-      const hasBlendLong  = blendState === 'long';
-      const hasBlendOpt   = blendState === 'opt';
-      const hasBlend = hasBlendShort || hasBlendLong || hasBlendOpt;
+      const hasMixShort = mixState === 'short';
+      const hasMixLong  = mixState === 'long';
+      const hasMixOpt   = mixState === 'opt';
+      const hasMix = hasMixShort || hasMixLong || hasMixOpt;
 
       let flagsHtml = '';
 
@@ -581,15 +584,15 @@
         flagsHtml += '<span class="badge badge-pill bg-dark border border-secondary">⏳ Aged (opt)</span>';
       }
 
-      if (hasBlendShort) {
-        flagsHtml += '<span class="badge badge-pill bg-primary">⚡ Short blend</span>';
-      } else if (hasBlendLong) {
-        flagsHtml += '<span class="badge badge-pill bg-primary">⏱ Long blend</span>';
-      } else if (hasBlendOpt) {
-        flagsHtml += '<span class="badge badge-pill bg-primary">🌀 Blend (opt)</span>';
+      if (hasMixShort) {
+        flagsHtml += '<span class="badge badge-pill bg-primary">⚡ Short mix</span>';
+      } else if (hasMixLong) {
+        flagsHtml += '<span class="badge badge-pill bg-primary">⏱ Long mix</span>';
+      } else if (hasMixOpt) {
+        flagsHtml += '<span class="badge badge-pill bg-primary">🌀 Mix (opt)</span>';
       }
 
-      const noFlags = !hasIceReq && !hasIceOpt && !hasAgeReq && !hasAgeOpt && !hasBlend;
+      const noFlags = !hasIceReq && !hasIceOpt && !hasAgeReq && !hasAgeOpt && !hasMix;
 
       col.innerHTML = `
         <div class="glass drink-card h-100 p-3 border border-0">
