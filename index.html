@@ -108,7 +108,7 @@
       border: 1px solid #495057;
       padding-inline: 0.75rem;
       font-size: 0.8rem;
-      min-width: 145px;
+      min-width: 150px;
     }
 
     .sort-select:focus {
@@ -185,9 +185,10 @@
 
     <div class="d-flex align-items-center gap-2 flex-wrap justify-content-md-end sort-wrapper">
       <div class="d-flex align-items-center gap-2">
-        <span class="caps" style="font-size: 0.7rem;">Sort by</span>
+        <span class="caps" style="font-size: 0.7rem;">Sort</span>
         <select id="sort-select" class="sort-select form-select form-select-sm">
-          <option value="name">Name (A → Z)</option>
+          <!-- "" means "default", which is A→Z by name -->
+          <option value="">Default (A → Z)</option>
           <option value="k">K</option>
           <option value="a">A</option>
           <option value="b">B</option>
@@ -197,8 +198,9 @@
       </div>
 
       <div class="btn-group sort-toggle" role="group" aria-label="Sort direction">
-        <button type="button" class="btn btn-sm active" data-dir="desc" id="sort-dir-desc">High → Low</button>
-        <button type="button" class="btn btn-sm" data-dir="asc" id="sort-dir-asc">Low → High</button>
+        <!-- Default: low→high so names are A→Z -->
+        <button type="button" class="btn btn-sm" data-dir="desc" id="sort-dir-desc">High → Low</button>
+        <button type="button" class="btn btn-sm active" data-dir="asc" id="sort-dir-asc">Low → High</button>
       </div>
 
       <div class="result-count ms-md-1 mt-1 mt-md-0" id="result-count"></div>
@@ -215,7 +217,7 @@
   <div id="results" class="row g-3"></div>
 
   <footer class="mt-4 text-center text-secondary small">
-    Data is loaded from <code>drinks.json</code>.<br>
+    Data is loaded from <code>drinks.json</code>.
   </footer>
 </div>
 
@@ -231,8 +233,9 @@
   const sortDirDesc   = document.getElementById('sort-dir-desc');
   const sortDirAsc    = document.getElementById('sort-dir-asc');
 
+  // Default: sort by name A → Z
   let currentSortKey = 'name';
-  let currentSortDir = 'desc'; // 'asc' or 'desc'
+  let currentSortDir = 'asc'; // 'asc' or 'desc'
 
   function normalizeFlagWithOpt(v) {
     if (typeof v === 'string') {
@@ -476,7 +479,9 @@
   searchInput.addEventListener('input', updateResults);
 
   sortSelect.addEventListener('change', () => {
-    currentSortKey = sortSelect.value;
+    const val = sortSelect.value;
+    // "" means "default" → keep name sort
+    currentSortKey = val || 'name';
     updateResults();
   });
 
@@ -515,7 +520,7 @@
     .then(data => {
       DRINKS = normalizeDrinks(data);
       renderQuickPicks(DRINKS);
-      updateResults(); // initial render
+      updateResults(); // initial render: A→Z
     })
     .catch(err => {
       console.error(err);
