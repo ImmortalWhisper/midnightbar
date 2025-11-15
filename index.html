@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Dammit Stella – Drink Search</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap for layout / base styles -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+    crossorigin="anonymous"
+  >
+
+  <style>
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, #ff4b8a15, transparent 55%),
+        radial-gradient(circle at bottom right, #00e5ff20, transparent 55%),
+        #050510;
+      color: #f8f9fa;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .glass {
+      background: #070814dd;
+      border-radius: 1rem;
+      border: 1px solid #ffffff20;
+      box-shadow: 0 18px 40px rgba(0,0,0,.65);
+      backdrop-filter: blur(14px);
+    }
+
+    .drink-card {
+      transition: transform .12s ease-out, box-shadow .12s ease-out, border-color .12s ease-out;
+      cursor: default;
+    }
+
+    .drink-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 32px rgba(0,0,0,.75);
+      border-color: #0d6efd80;
+    }
+
+    .caps {
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: .78rem;
+      color: #adb5bd;
+    }
+
+    .badge-pill { border-radius: 999px; }
+
+    .stat-pill {
+      min-width: 2.3rem;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.8rem;
+      padding: 0.25rem 0.6rem;
+    }
+
+    /* Color-coded stat pills */
+    .pill-a { background-color: #dc3545; color: #ffffff; }   /* red */
+    .pill-b { background-color: #ffc107; color: #212529; }   /* yellow */
+    .pill-d { background-color: #0dcaf0; color: #212529; }   /* light blue */
+    .pill-f { background-color: #198754; color: #ffffff; }   /* light green */
+    .pill-k {
+      background-color: #f8f9fa;   /* off white */
+      color: #212529;
+      border: 1px solid #ffffff55;
+    }
+
+    .stat-label {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      opacity: .8;
+    }
+
+    .brand-title {
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      font-size: .85rem;
+      color: #adb5bd;
+    }
+
+    .result-count {
+      font-size: .85rem;
+      color: #adb5bd;
+    }
+
+    a.badge:hover { filter: brightness(1.1); }
+  </style>
+</head>
+<body>
+<div class="container py-4 py-md-5">
+  <div class="mx-auto mb-4 glass p-3 p-md-4">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+      <div>
+        <div class="brand-title mb-1">Stella's Drinktionary</div>
+        <h1 class="h3 mb-1 fw-semibold">Dammit Stella – Drink Search</h1>
+        <p class="mb-0 text-secondary">
+          Start typing a drink name – results update live.
+        </p>
+      </div>
+      <form class="w-100 w-md-50" onsubmit="return false;">
+        <div class="input-group input-group-lg shadow-sm">
+          <span class="input-group-text bg-dark border-secondary text-secondary">🔍</span>
+          <input
+            id="search-input"
+            type="text"
+            class="form-control bg-dark border-secondary text-light"
+            autocomplete="off"
+            placeholder="Search for &quot;Abyssal Hug&quot;…">
+        </div>
+        <div class="form-text text-light mt-2">
+          Quick picks are below if you forget a name.
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-baseline mb-3">
+    <div class="caps">
+      Results
+      <span id="query-label" class="text-secondary"></span>
+    </div>
+    <div class="result-count" id="result-count"></div>
+  </div>
+
+  <div class="mb-3">
+    <div class="caps mb-2">Quick picks</div>
+    <div class="d-flex flex-wrap gap-2" id="quick-picks">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+
+  <div id="results" class="row g-3"></div>
+
+  <footer class="mt-4 text-center text-secondary small">
+    Data is loaded from <code>drinks.json</code>.<br>
+    Ice/Age accept <code>true/false</code> or <code>"OPT"</code>.
+    Blend uses <code>"short"</code>, <code>"long"</code>, or <code>"OPT"</code>.
+  </footer>
+</div>
+
+<script>
+  let DRINKS = [];
+
+  const searchInput   = document.getElementById('search-input');
+  const resultsEl     = document.getElementById('results');
+  const resultCountEl = document.getElementById('result-count');
+  const queryLabelEl  = document.getElementById('query-label');
+  const quickPicksEl  = document.getElementById('quick-picks');
+
+  function normalizeFlagWithOpt(v) {
+    if (typeof v === 'string') {
+      const s = v.trim().toLowerCase();
+      if (s === 'opt' || s === 'optional') return 'opt';
+      if (['', '0', 'false', 'no', 'none', 'off'].includes(s)) return 'none';
+      return 'req';
+    }
+    if (typeof v === 'boolean') return v ? 'req' : 'none';
+    if (typeof v === 'number') return v ? 'req' : 'none';
+    return 'none';
+  }
+
+  function normalizeBlend(v) {
+    if (typeof v === 'string') {
+      const s = v.trim().toLowerCase();
+      if (s === 'short' || s === 's') return 'short';
+      if (s === 'long'  || s === 'l') return 'long';
+      if (s === 'opt'   || s === 'optional') return 'opt';
+      return '';
+    }
+    if (typeof v === 'boolean') return v ? 'short' : '';
+    if (typeof v === 'number')  return v ? 'short' : '';
+    return '';
+  }
+
+  function normalizeDrinks(raw) {
+    return raw.map(d => ({
+      ...d,
+      ice: normalizeFlagWithOpt(d.ice),
+      age: normalizeFlagWithOpt(d.age),
+      blend: normalizeBlend(d.blend),
+    }));
+  }
+
+  function matchesQuery(drink, q) {
+    if (!q) return true;
+    const name = (drink.name || '').toLowerCase();
+    return name.includes(q);
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function renderQuickPicks(list) {
+    quickPicksEl.innerHTML = '';
+    const max = Math.min(10, list.length);
+    for (let i = 0; i < max; i++) {
+      const d = list[i];
+      const a = document.createElement('a');
+      a.href = '#';
+      a.className = 'badge rounded-pill bg-secondary text-decoration-none px-3 py-2 quick-pick';
+      a.dataset.name = d.name || '';
+      a.textContent = d.name || '';
+      quickPicksEl.appendChild(a);
+    }
+  }
+
+  function renderResults(list, query) {
+    resultsEl.innerHTML = '';
+
+    const count = list.length;
+    if (query) {
+      queryLabelEl.textContent = ` for “${query}”`;
+    } else {
+      queryLabelEl.textContent = '';
+    }
+    resultCountEl.textContent = count + (count === 1 ? ' match' : ' matches');
+
+    if (count === 0) {
+      const div = document.createElement('div');
+      div.className = 'alert alert-warning glass border-warning-subtle text-warning-emphasis';
+      div.textContent = 'No drinks found with that name. Double-check the spelling against the image.';
+      resultsEl.appendChild(div);
+      return;
+    }
+
+    list.forEach(d => {
+      const col = document.createElement('div');
+      col.className = 'col-12 col-md-6 col-lg-4';
+
+      const name = escapeHtml(d.name || '');
+      const altName = escapeHtml(d.alt_name || '');
+      const a = d.a !== null && d.a !== undefined ? d.a : '—';
+      const b = d.b !== null && d.b !== undefined ? d.b : '—';
+      const dd = d.d !== null && d.d !== undefined ? d.d : '—';
+      const f = d.f !== null && d.f !== undefined ? d.f : '—';
+      const k = d.k !== null && d.k !== undefined && d.k !== '' ? d.k : '—';
+      const notes = escapeHtml(d.notes || '');
+
+      const iceState   = (d.ice   || 'none').toString().toLowerCase();
+      const ageState   = (d.age   || 'none').toString().toLowerCase();
+      const blendState = (d.blend || '').toString().toLowerCase();
+
+      const hasIceReq = iceState === 'req';
+      const hasIceOpt = iceState === 'opt';
+      const hasAgeReq = ageState === 'req';
+      const hasAgeOpt = ageState === 'opt';
+      const hasBlendShort = blendState === 'short';
+      const hasBlendLong  = blendState === 'long';
+      const hasBlendOpt   = blendState === 'opt';
+      const hasBlend = hasBlendShort || hasBlendLong || hasBlendOpt;
+
+      let flagsHtml = '';
+
+      if (hasIceReq) {
+        flagsHtml += '<span class="badge badge-pill bg-info text-dark">🧊 Ice</span>';
+      }
+      if (hasIceOpt) {
+        flagsHtml += '<span class="badge badge-pill bg-info text-dark">🧊 Ice (opt)</span>';
+      }
+      if (hasAgeReq) {
+        flagsHtml += '<span class="badge badge-pill bg-dark border border-secondary">⏳ Aged</span>';
+      }
+      if (hasAgeOpt) {
+        flagsHtml += '<span class="badge badge-pill bg-dark border border-secondary">⏳ Aged (opt)</span>';
+      }
+
+      if (hasBlendShort) {
+        flagsHtml += '<span class="badge badge-pill bg-primary">⚡ Short blend</span>';
+      } else if (hasBlendLong) {
+        flagsHtml += '<span class="badge badge-pill bg-primary">⏱ Long blend</span>';
+      } else if (hasBlendOpt) {
+        flagsHtml += '<span class="badge badge-pill bg-primary">🌀 Blend (opt)</span>';
+      }
+
+      const noFlags = !hasIceReq && !hasIceOpt && !hasAgeReq && !hasAgeOpt && !hasBlend;
+
+      col.innerHTML = `
+        <div class="glass drink-card h-100 p-3 border border-0">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <h2 class="h5 mb-1">${name}</h2>
+              ${altName ? `<div class="text-secondary small">${altName}</div>` : ``}
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <div class="stat-label mb-1">Stats</div>
+            <div class="d-flex flex-wrap gap-1">
+              <div class="badge badge-pill stat-pill pill-a">A: ${a}</div>
+              <div class="badge badge-pill stat-pill pill-b">B: ${b}</div>
+              <div class="badge badge-pill stat-pill pill-d">D: ${dd}</div>
+              <div class="badge badge-pill stat-pill pill-f">F: ${f}</div>
+              <div class="badge badge-pill stat-pill pill-k">K: ${k}</div>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <div class="stat-label mb-1">Flags</div>
+            <div class="d-flex flex-wrap gap-1">
+              ${noFlags ? '<span class="text-secondary small">No extra flags set for this entry.</span>' : flagsHtml}
+            </div>
+          </div>
+
+          ${notes ? `<p class="small text-secondary mb-0">${notes}</p>` : ''}
+        </div>
+      `;
+
+      resultsEl.appendChild(col);
+    });
+  }
+
+  function updateResults() {
+    const qraw = searchInput.value || '';
+    const q = qraw.trim().toLowerCase();
+    const filtered = DRINKS.filter(d => matchesQuery(d, q));
+    renderResults(filtered, qraw.trim());
+  }
+
+  searchInput.addEventListener('input', updateResults);
+
+  if (quickPicksEl) {
+    quickPicksEl.addEventListener('click', (ev) => {
+      const target = ev.target.closest('.quick-pick');
+      if (!target) return;
+      ev.preventDefault();
+      const name = target.getAttribute('data-name') || '';
+      searchInput.value = name;
+      updateResults();
+      searchInput.focus();
+    });
+  }
+
+  // Load drinks.json, normalize, then render
+  fetch('drinks.json')
+    .then(resp => {
+      if (!resp.ok) throw new Error('Failed to load drinks.json');
+      return resp.json();
+    })
+    .then(data => {
+      DRINKS = normalizeDrinks(data);
+      renderQuickPicks(DRINKS);
+      renderResults(DRINKS, '');
+    })
+    .catch(err => {
+      console.error(err);
+      resultsEl.innerHTML = '<div class="alert alert-danger">Failed to load drinks.json. Check the file location and GitHub Pages settings.</div>';
+      resultCountEl.textContent = '';
+    });
+</script>
+</body>
+</html>
