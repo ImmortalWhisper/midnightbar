@@ -396,6 +396,18 @@
     "notes": ""
   },
   {
+    "name": "Devil Dog",
+    "a": 1,
+    "b": 1,
+    "d": 1,
+    "f": 0,
+    "k": "^17",
+    "ice": false,
+    "age": true,
+    "mix": "false",
+    "notes": ""
+  },
+  {
     "name": "D. Roulette",
     "a": 2,
     "b": 0,
