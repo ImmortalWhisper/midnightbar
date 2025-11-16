@@ -72,6 +72,30 @@
     "notes": ""
   },
   {
+    "name": "BazedBall (Yellow)",
+    "a": 0,
+    "b": 1,
+    "d": 0,
+    "f": 0,
+    "k": "10",
+    "ice": false,
+    "age": false,
+    "mix": "short",
+    "notes": ""
+  },
+  {
+    "name": "BazedBall (Green)",
+    "a": 0,
+    "b": 0,
+    "d": 0,
+    "f": 1,
+    "k": "10",
+    "ice": false,
+    "age": false,
+    "mix": "short",
+    "notes": ""
+  },
+  {
     "name": "Bean Queen",
     "a": 0,
     "b": 2,
@@ -212,30 +236,6 @@
     "k": "^11",
     "ice": false,
     "age": true,
-    "mix": "short",
-    "notes": ""
-  },
-  {
-    "name": "Buzz Ball (Yellow)",
-    "a": 0,
-    "b": 1,
-    "d": 0,
-    "f": 0,
-    "k": "10",
-    "ice": false,
-    "age": false,
-    "mix": "short",
-    "notes": ""
-  },
-  {
-    "name": "Buzz Ball (Green)",
-    "a": 0,
-    "b": 0,
-    "d": 0,
-    "f": 1,
-    "k": "10",
-    "ice": false,
-    "age": false,
     "mix": "short",
     "notes": ""
   },
