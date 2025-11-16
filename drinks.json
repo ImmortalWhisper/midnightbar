@@ -223,7 +223,7 @@
     "f": 0,
     "k": "10",
     "ice": false,
-    "age": flase,
+    "age": false,
     "mix": "short",
     "notes": ""
   },
@@ -235,7 +235,7 @@
     "f": 1,
     "k": "10",
     "ice": false,
-    "age": flase,
+    "age": false,
     "mix": "short",
     "notes": ""
   },
