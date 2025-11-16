@@ -568,12 +568,6 @@
       .replace(/'/g, "&#039;");
   }
 
-  function slugifyNameForImage(name) {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "");
-  }
 
   function getDrinkImagePath(d) {
     if (d.image && typeof d.image === "string" && d.image.trim() !== "") {
@@ -581,9 +575,8 @@
     }
     const name = d.name || "";
     if (!name) return "";
-    const slug = slugifyNameForImage(name);
-    if (!slug) return "";
-    return "drinks/" + slug + ".png";
+    const encoded = encodeURIComponent(name.trim());
+    return "drinks/" + encoded + ".png";
   }
 
   function renderQuickPicks(list) {
