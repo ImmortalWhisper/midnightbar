@@ -258,10 +258,24 @@
       color: #f8f9fa;
     }
 
+    .drink-thumb {
+      width: 52px;
+      height: 52px;
+      object-fit: cover;
+      border-radius: 0.75rem;
+      border: 1px solid #ffffff33;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+      margin-right: 0.6rem;
+    }
+
     @media (max-width: 576px) {
       .sort-wrapper {
         width: 100%;
         justify-content: space-between;
+      }
+      .drink-thumb {
+        width: 44px;
+        height: 44px;
       }
     }
   </style>
@@ -324,35 +338,35 @@
             <span class="color-dot k"></span>
             <span class="sort-option-label-main">
               <span class="sort-option-title">K</span>
-              <span class="sort-option-sub">Karmotrine</span>
+              <span class="sort-option-sub">K = Karmotrine</span>
             </span>
           </button>
           <button class="sort-option" data-key="a">
             <span class="color-dot a"></span>
             <span class="sort-option-label-main">
               <span class="sort-option-title">A</span>
-              <span class="sort-option-sub">Adelhype</span>
+              <span class="sort-option-sub">A = Adelhype</span>
             </span>
           </button>
           <button class="sort-option" data-key="b">
             <span class="color-dot b"></span>
             <span class="sort-option-label-main">
               <span class="sort-option-title">B</span>
-              <span class="sort-option-sub">Bronson Ext</span>
+              <span class="sort-option-sub">B = Bronson Ext</span>
             </span>
           </button>
           <button class="sort-option" data-key="d">
             <span class="color-dot d"></span>
             <span class="sort-option-label-main">
               <span class="sort-option-title">D</span>
-              <span class="sort-option-sub">Pwd Delta</span>
+              <span class="sort-option-sub">D = Pwd Delta</span>
             </span>
           </button>
           <button class="sort-option" data-key="f">
             <span class="color-dot f"></span>
             <span class="sort-option-label-main">
               <span class="sort-option-title">F</span>
-              <span class="sort-option-sub">Flanergide</span>
+              <span class="sort-option-sub">F = Flanergide</span>
             </span>
           </button>
         </div>
@@ -554,6 +568,24 @@
       .replace(/'/g, "&#039;");
   }
 
+  function slugifyNameForImage(name) {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
+
+  function getDrinkImagePath(d) {
+    if (d.image && typeof d.image === "string" && d.image.trim() !== "") {
+      return "drinks/" + d.image.trim();
+    }
+    const name = d.name || "";
+    if (!name) return "";
+    const slug = slugifyNameForImage(name);
+    if (!slug) return "";
+    return "drinks/" + slug + ".png";
+  }
+
   function renderQuickPicks(list) {
     quickPicksEl.innerHTML = '';
     const max = Math.min(10, list.length);
@@ -638,12 +670,20 @@
 
       const noFlags = !hasIceReq && !hasIceOpt && !hasAgeReq && !hasAgeOpt && !hasMix;
 
+      const imgPath = getDrinkImagePath(d);
+      const imgHtml = imgPath
+        ? `<img src="${escapeHtml(imgPath)}" alt="${name}" class="drink-thumb" onerror="this.style.display='none';">`
+        : '';
+
       col.innerHTML = `
         <div class="glass drink-card h-100 p-3 border border-0">
           <div class="d-flex justify-content-between align-items-start mb-2">
-            <div>
-              <h2 class="h5 mb-1">${name}</h2>
-              ${altName ? `<div class="text-secondary small">${altName}</div>` : ``}
+            <div class="d-flex align-items-start">
+              ${imgHtml}
+              <div>
+                <h2 class="h5 mb-1">${name}</h2>
+                ${altName ? `<div class="text-secondary small">${altName}</div>` : ``}
+              </div>
             </div>
           </div>
 
